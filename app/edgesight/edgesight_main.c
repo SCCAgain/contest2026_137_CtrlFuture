@@ -35,6 +35,9 @@
 #include "display_hal.h"
 #include "recorder_hal.h"
 #include "network_hal.h"
+#include "event_log.h"
+#include "config.h"
+#include "perf_stats.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -50,6 +53,10 @@
 
 struct edgesight_app_s
 {
+  /* Configuration */
+
+  struct edgesight_config_s config;
+
   /* Fall detector */
 
   struct fall_detector_s fall_ctx;
@@ -61,6 +68,11 @@ struct edgesight_app_s
   struct display_context_s display;
   struct recorder_context_s recorder;
   struct network_context_s network;
+
+  /* Subsystems */
+
+  struct event_log_s log;
+  struct perf_stats_s perf;
 
   /* Pipeline state flags */
 
@@ -298,13 +310,34 @@ int main(int argc, char *argv[])
 
   memset(&g_app, 0, sizeof(g_app));
   g_app.running = true;
+
+  /* Load configuration (defaults + SD card override) */
+
+  config_set_defaults(&g_app.config);
+  ret = config_load_file(&g_app.config, NULL);
+  if (ret == -1)
+    {
+      printf("[edgesight] No config file, using defaults\n");
+    }
+
+  config_dump(&g_app.config);
+
+  /* Initialize subsystems */
+
   fall_detect_init(&g_app.fall_ctx);
+  event_log_init(&g_app.log, "/mnt/sd");
+  perf_stats_init(&g_app.perf);
+
+  event_log_write(&g_app.log, EVENT_LEVEL_INFO, 0,
+                  "EdgeSight v%s starting", EDGESIGHT_VERSION);
 
   /* Hardware initialization */
 
   ret = edgesight_hw_init();
   if (ret < 0)
     {
+      event_log_write(&g_app.log, EVENT_LEVEL_ERROR, 0,
+                      "HW init failed: %d", ret);
       printf("[edgesight] ERROR: HW init failed: %d\n", ret);
       return EXIT_FAILURE;
     }
@@ -314,15 +347,31 @@ int main(int argc, char *argv[])
   ret = edgesight_ai_init();
   if (ret < 0)
     {
+      event_log_write(&g_app.log, EVENT_LEVEL_ERROR, 0,
+                      "AI init failed: %d", ret);
       printf("[edgesight] ERROR: AI init failed: %d\n", ret);
       return EXIT_FAILURE;
     }
+
+  event_log_write(&g_app.log, EVENT_LEVEL_INFO, 0,
+                  "Init complete, entering main loop");
+  event_log_flush(&g_app.log);
 
   printf("[edgesight] Starting main loop...\n");
 
   /* Main processing loop */
 
   edgesight_loop(&g_app);
+
+  /* Shutdown */
+
+  event_log_write(&g_app.log, EVENT_LEVEL_INFO,
+                  g_app.frame_count,
+                  "Shutdown. Frames=%lu Falls=%lu",
+                  (unsigned long)g_app.frame_count,
+                  (unsigned long)g_app.fall_count);
+  event_log_flush(&g_app.log);
+  perf_stats_dump(&g_app.perf);
 
   printf("[edgesight] Shutting down. Frames: %lu Falls: %lu\n",
          (unsigned long)g_app.frame_count,
