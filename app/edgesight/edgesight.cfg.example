@@ -1,0 +1,93 @@
+# EdgeSight Configuration File
+# Copy to SD card as /mnt/sd/edgesight.cfg
+# Lines starting with # are comments
+# Format: key=value (no spaces around =)
+
+# ============================================
+# Fall Detection Parameters
+# ============================================
+
+# Torso angle threshold (degrees from vertical)
+# Lower = more sensitive, higher = fewer false positives
+fall.angle_thresh=45.0
+
+# Center of gravity height ratio (0.0-1.0)
+# Person COG below this fraction of bbox height = fallen
+fall.cog_thresh=0.5
+
+# Bounding box width/height ratio
+# W/H above this = horizontal posture (likely fallen)
+fall.bbox_thresh=1.2
+
+# Minimum detection confidence to consider (0.0-1.0)
+fall.confidence=0.6
+
+# Consecutive frames required before confirming fall
+fall.frames=3
+
+# ============================================
+# Event Recording
+# ============================================
+
+# Maximum clip duration (seconds)
+record.duration=30
+
+# Pre-event buffer (seconds before fall trigger)
+record.pre_event=5
+
+# H.264 encoding bitrate (kbps)
+record.bitrate=2000
+
+# Recording frame rate
+record.fps=15
+
+# GOP size (keyframe interval)
+record.gop=30
+
+# ============================================
+# MQTT Network
+# ============================================
+
+# MQTT broker IP or hostname
+mqtt.broker=192.168.1.1
+
+# MQTT broker port
+mqtt.port=1883
+
+# Alert publish topic
+mqtt.topic=edgesight/alert
+
+# Device identifier (unique per device)
+mqtt.device_id=edgesight-001
+
+# MQTT QoS level (0, 1, or 2)
+mqtt.qos=1
+
+# ============================================
+# Display Overlay
+# ============================================
+
+# Show detection bounding boxes (0=off, 1=on)
+display.bbox=1
+
+# Show pose skeleton lines (0=off, 1=on)
+display.skeleton=1
+
+# Show FPS/inference stats panel (0=off, 1=on)
+display.stats=1
+
+# Show fall alert overlay (0=off, 1=on)
+display.alert=1
+
+# ============================================
+# Global Settings
+# ============================================
+
+# Log level: 0=DEBUG 1=INFO 2=WARN 3=ALERT 4=ERROR
+log_level=1
+
+# Auto-start recording on fall detection (0=off, 1=on)
+auto_record=1
+
+# Auto-send MQTT alert on fall detection (0=off, 1=on)
+auto_alert=1
