@@ -27,4 +27,8 @@ VPATH += $(shell readlink -f $(TOPDIR)/$(CONFIG_ARCH_BOARD_CUSTOM_DIR))/src
 
 CSRCS = board_bringup.c
 
+ifeq ($(CONFIG_EDGESIGHT_CLOCK_800MHZ),y)
+  CSRCS += stm32n6_clockconfig.c
+endif
+
 include $(TOPDIR)/boards/Board.mk
