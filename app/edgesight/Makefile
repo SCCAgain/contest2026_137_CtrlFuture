@@ -15,6 +15,6 @@ MODULE    = $(CONFIG_APP_EDGESIGHT)
 MAINSRC = edgesight_main.c
 
 CSRCS  = fall_detect.c postprocess.c npu_hal.c camera_hal.c \
-         display_hal.c recorder_hal.c network_hal.c
+         display_hal.c recorder_hal.c network_hal.c event_log.c
 
 include $(APPDIR)/Application.mk
