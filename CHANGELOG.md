@@ -15,12 +15,19 @@ All notable changes to this project will be documented in this file.
   - recorder_hal.h: H.264 VENC + SD card event recording abstraction
   - network_hal.h: Ethernet + MQTT alert publishing abstraction
   - memory_map.h: STM32N6 SRAM/Flash buffer allocation plan
+  - event_log.c/h: ring buffer event logging with SD card flush
+  - config.c/h: runtime configuration (key=value parser from SD card)
+  - perf_stats.c/h: performance tracking (FPS, inference time, rolling avg)
+  - alert_msg.c/h: MQTT JSON payload formatter (fall/recovery/heartbeat)
+  - edgesight.cfg.example: sample configuration file for SD card
   - test_fall_detect.c: 5-scenario unit test (ALL PASS on host)
   - Kconfig, Makefile, CMakeLists.txt, Make.defs, README.md
-- ST official reference code analysis report (docs/st-reference-analysis.md)
-- 800MHz clock configuration in board.h (CONFIG_EDGESIGHT_CLOCK_800MHZ)
+- 800MHz clock configuration skeleton (board/contest_board/src/stm32n6_clockconfig.c)
+- 800MHz clock defines in board.h (CONFIG_EDGESIGHT_CLOCK_800MHZ)
 - EdgeSight defconfig (board/contest_board/configs/edgesight/)
 - Manifest linkfile for edgesight app
+- ST official reference code analysis report (docs/st-reference-analysis.md)
+- All 38 ADR documents fully populated with implementation decisions
 
 ### Analysis Complete
 - STM32CubeN6 HAL drivers: all EdgeSight peripherals covered
