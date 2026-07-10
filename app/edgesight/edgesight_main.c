@@ -175,6 +175,9 @@ static void edgesight_loop(struct edgesight_app_s *app)
 
   while (app->running)
     {
+      /* Track frame timing */
+
+      perf_stats_frame_begin(&app->perf);
       /* Step 1: Capture frame from camera (NN pipe, snapshot mode)
        * camera_hal_start(&app->camera, 1, nn_buffer, CAM_MODE_SNAPSHOT);
        * Wait for frame callback...
@@ -285,6 +288,15 @@ static void edgesight_loop(struct edgesight_app_s *app)
 
       app->frame_count++;
       app->detect_count += detections.count;
+      app->perf.detect_count = app->detect_count;
+      app->perf.fall_count = app->fall_count;
+
+      /* Periodic log flush (every 100 frames) */
+
+      if ((app->frame_count % 100) == 0)
+        {
+          event_log_flush(&app->log);
+        }
 
       /* Yield to other tasks */
 
