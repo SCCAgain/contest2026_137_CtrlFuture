@@ -1,6 +1,6 @@
-/****************************************************************************
- * app/edgesight/Kconfig
- ****************************************************************************/
+#
+# app/edgesight/Kconfig
+#
 
 config APP_EDGESIGHT
 	tristate "EdgeSight AI Edge Sentinel"
