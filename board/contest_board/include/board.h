@@ -137,6 +137,19 @@
 #define GPIO_USART1_TX   GPIO_USART1_TX_1
 #define GPIO_USART1_RX   GPIO_USART1_RX_1
 
+/* Display Framebuffer Addresses
+ * Background (camera): 800x480x2 = 768KB
+ * Foreground (overlay): 800x480x2 = 768KB (x2 for double-buffering)
+ * Total: ~2.3MB, placed in AXISRAM1 upper region
+ */
+
+#define BOARD_LCD_WIDTH      800
+#define BOARD_LCD_HEIGHT     480
+
+#define BOARD_LCD_BG_ADDR    0x34100000
+#define BOARD_LCD_FG_ADDR0   0x341C0000
+#define BOARD_LCD_FG_ADDR1   0x34280000
+
 #else /* !CONFIG_ARCH_CHIP_STM32N6 — QEMU/MPS3 build */
 
 /* MPS3-AN547 SysTick clock for QEMU emulation (25 MHz REFCLK) */

@@ -31,4 +31,12 @@ set(SRCS
     stm32n6_timerisr.c
     stm32n6_pwr.c)
 
+if(CONFIG_VIDEO)
+  list(APPEND SRCS stm32n6_dcmipp.c)
+endif()
+
+if(CONFIG_VIDEO_FB)
+  list(APPEND SRCS stm32n6_ltdc.c)
+endif()
+
 target_sources(arch PRIVATE ${SRCS})

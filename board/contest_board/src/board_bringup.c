@@ -35,6 +35,8 @@
 
 #ifdef CONFIG_ARCH_CHIP_STM32N6
 #  include "arm_internal.h"
+#  include "stm32n6_dcmipp.h"
+#  include "stm32n6_ltdc.h"
 #endif
 
 #include <arch/board/board.h>
@@ -72,6 +74,35 @@ static int board_bringup(void)
              "ERROR: Failed to mount tmpfs at %s: %d\n",
              CONFIG_LIBC_TMPDIR, ret);
     }
+#endif
+
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+#  ifdef CONFIG_VIDEO
+  /* Initialize DCMIPP camera (800x480 @ 30fps) */
+
+  ret = stm32n6_dcmipp_init(800, 480, 30);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR,
+             "ERROR: DCMIPP init failed: %d\n", ret);
+    }
+#  endif
+
+#  ifdef CONFIG_VIDEO_FB
+  /* Initialize LTDC display (800x480, dual-layer)
+   * Framebuffers allocated from board.h or linker script
+   */
+
+  ret = stm32n6_ltdc_init(800, 480,
+                            (void *)BOARD_LCD_BG_ADDR,
+                            (void *)BOARD_LCD_FG_ADDR0,
+                            (void *)BOARD_LCD_FG_ADDR1);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR,
+             "ERROR: LTDC init failed: %d\n", ret);
+    }
+#  endif
 #endif
 
   return ret;
