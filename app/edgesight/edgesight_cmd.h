@@ -35,11 +35,11 @@
 >>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 struct edgesight_cmd_context_s
 {
-  volatile bool running;
-  volatile bool recording;
-  uint32_t frame_count;
-  uint32_t detect_count;
-  uint32_t fall_count;
+  volatile bool *running;
+  volatile bool *recording;
+  uint32_t *frame_count;
+  uint32_t *detect_count;
+  uint32_t *fall_count;
   struct fall_detector_s *fall_ctx;
   struct perf_stats_s *perf;
   struct event_log_s *log;
