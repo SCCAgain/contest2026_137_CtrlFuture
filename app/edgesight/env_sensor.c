@@ -5,11 +5,14 @@
  *
  * EdgeSight - Environmental sensor implementation.
  *
+<<<<<<< HEAD
  * Hardware:
  *   - SHT30: Temperature + Humidity (I2C4, addr 0x44)
  *   - MQ-2:  Smoke sensor (ADC, analog output)
  *   - AM312: PIR motion sensor (GPIO, digital output)
  *
+=======
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
  ****************************************************************************/
 
 /****************************************************************************
@@ -23,7 +26,10 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <time.h>
+<<<<<<< HEAD
 #include <sys/ioctl.h>
+=======
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -46,6 +52,7 @@ static uint32_t get_ms(void)
 
 static int read_sht30(int fd, float *temp, float *humi)
 {
+<<<<<<< HEAD
   uint8_t cmd[2];
   uint8_t data[6];
   int ret;
@@ -80,16 +87,27 @@ static int read_sht30(int fd, float *temp, float *humi)
   UNUSED(data);
   UNUSED(ret);
 
+=======
+  /* TODO: Use NuttX I2C interface */
+
+  (void)fd;
+  *temp = 25.0f;
+  *humi = 50.0f;
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
   return 0;
 }
 
 static float read_smoke_adc(int fd)
 {
+<<<<<<< HEAD
   /* TODO: Read ADC value and normalize to 0-1
    * int adc_val;
    * ret = read(fd, &adc_val, sizeof(adc_val));
    * return (float)adc_val / 4095.0f;
    */
+=======
+  /* TODO: Read ADC value */
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 
   (void)fd;
   return 0.0f;
@@ -97,11 +115,15 @@ static float read_smoke_adc(int fd)
 
 static bool read_pir_gpio(int pin)
 {
+<<<<<<< HEAD
   /* TODO: Read GPIO pin state
    * int value;
    * ret = ioctl(pin, GPIOC_READ, &value);
    * return value != 0;
    */
+=======
+  /* TODO: Read GPIO pin state */
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 
   (void)pin;
   return false;
@@ -115,6 +137,7 @@ int env_sensor_init(struct env_sensor_context_s *ctx)
 {
   memset(ctx, 0, sizeof(*ctx));
 
+<<<<<<< HEAD
   /* TODO: Open I2C4 for SHT30
    * ctx->i2c_fd = open("/dev/i2c4", O_RDWR);
    */
@@ -127,6 +150,8 @@ int env_sensor_init(struct env_sensor_context_s *ctx)
    * ctx->pir_gpio = open("/dev/gpio0", O_RDONLY);
    */
 
+=======
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
   ctx->i2c_fd = -1;
   ctx->adc_fd = -1;
   ctx->pir_gpio = -1;
@@ -149,8 +174,11 @@ int env_sensor_read(struct env_sensor_context_s *ctx,
   memset(data, 0, sizeof(*data));
   data->timestamp_ms = get_ms();
 
+<<<<<<< HEAD
   /* Read SHT30 temperature + humidity */
 
+=======
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
   ret = read_sht30(ctx->i2c_fd,
                    &data->temperature,
                    &data->humidity);
@@ -160,6 +188,7 @@ int env_sensor_read(struct env_sensor_context_s *ctx,
       data->valid[ENV_SENSOR_HUMIDITY] = true;
     }
 
+<<<<<<< HEAD
   /* Read smoke sensor */
 
   data->smoke_level = read_smoke_adc(ctx->adc_fd);
@@ -173,6 +202,13 @@ int env_sensor_read(struct env_sensor_context_s *ctx,
     (ctx->pir_gpio >= 0);
 
   /* Cache last reading */
+=======
+  data->smoke_level = read_smoke_adc(ctx->adc_fd);
+  data->valid[ENV_SENSOR_SMOKE] = (ctx->adc_fd >= 0);
+
+  data->pir_motion = read_pir_gpio(ctx->pir_gpio);
+  data->valid[ENV_SENSOR_PIR] = (ctx->pir_gpio >= 0);
+>>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 
   ctx->last_data = *data;
   return 0;
