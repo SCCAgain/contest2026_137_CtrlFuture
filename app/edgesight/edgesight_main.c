@@ -477,9 +477,62 @@ static void edgesight_loop(struct edgesight_app_s *app)
  * Public Functions
  ****************************************************************************/
 
+static void edgesight_cmd_dispatch(int argc, char *argv[])
+{
+  if (argc < 2)
+    {
+      printf("Usage: edgesight <command>\n");
+      printf("  start    - Start EdgeSight pipeline\n");
+      printf("  status   - Show runtime status\n");
+      printf("  config   - Show configuration\n");
+      printf("  log      - Show recent events\n");
+      printf("  reset    - Reset fall detector\n");
+      printf("  help     - Show this help\n");
+      return;
+    }
+
+  if (strcmp(argv[1], "start") == 0)
+    {
+      /* Start pipeline - fall through to main init */
+
+      return;
+    }
+
+  /* For status/config/log/reset, need running instance */
+
+  if (strcmp(argv[1], "status") == 0)
+    {
+      edgesight_cmd_execute("status");
+    }
+  else if (strcmp(argv[1], "config") == 0)
+    {
+      edgesight_cmd_execute("config");
+    }
+  else if (strcmp(argv[1], "log") == 0)
+    {
+      edgesight_cmd_execute("log");
+    }
+  else if (strcmp(argv[1], "reset") == 0)
+    {
+      edgesight_cmd_execute("reset");
+    }
+  else
+    {
+      printf("Unknown command: %s\n", argv[1]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
   int ret;
+
+  /* Handle subcommands first */
+
+  if (argc >= 2 && strcmp(argv[1], "start") != 0)
+    {
+      edgesight_cmd_dispatch(argc, argv);
+      return EXIT_SUCCESS;
+    }
 
   edgesight_banner();
 
@@ -508,9 +561,9 @@ int main(int argc, char *argv[])
 
   g_app.cmd_ctx.running = &g_app.running;
   g_app.cmd_ctx.recording = &g_app.recording;
-  g_app.cmd_ctx.frame_count = g_app.frame_count;
-  g_app.cmd_ctx.detect_count = g_app.detect_count;
-  g_app.cmd_ctx.fall_count = g_app.fall_count;
+  g_app.cmd_ctx.frame_count = &g_app.frame_count;
+  g_app.cmd_ctx.detect_count = &g_app.detect_count;
+  g_app.cmd_ctx.fall_count = &g_app.fall_count;
   g_app.cmd_ctx.fall_ctx = &g_app.fall_ctx;
   g_app.cmd_ctx.perf = &g_app.perf;
   g_app.cmd_ctx.log = &g_app.log;
