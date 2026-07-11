@@ -6,8 +6,7 @@
  * EdgeSight - Camera HAL implementation.
  * Wraps DCMIPP dual-pipeline + ISP middleware for NuttX.
  *
- * TODO: Replace stub code with actual CMW_CAMERA API calls when
- * hardware is available.
+ * Integrates with arch/arm/stm32n6/stm32n6_dcmipp.c driver.
  *
  ****************************************************************************/
 
@@ -19,15 +18,11 @@
 #include "memory_map.h"
 #include <string.h>
 #include <stdio.h>
+#include <syslog.h>
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/* When building with real hardware, include ST camera middleware:
- * #include "cmw_camera.h"
- * #include "stm32n6xx_hal_dcmipp.h"
- */
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+#  include "stm32n6_dcmipp.h"
+#endif
 
 /****************************************************************************
  * Private Data
@@ -44,23 +39,30 @@ int camera_hal_init(struct camera_context_s *ctx, uint32_t fps)
 {
   memset(ctx, 0, sizeof(*ctx));
 
-  /* On real hardware:
-   *   CMW_CameraInit_t cam_conf;
-   *   cam_conf.width = 0;   (sensor default)
-   *   cam_conf.height = 0;
-   *   cam_conf.fps = fps;
-   *   cam_conf.mirror_flip = CAMERA_FLIP;
-   *   ret = CMW_CAMERA_Init(&cam_conf, NULL);
-   *   ctx->sensor_width = cam_conf.width;
-   *   ctx->sensor_height = cam_conf.height;
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  /* Initialize DCMIPP via arch-level driver
+   * Display pipe: 800x480 RGB565 continuous
+   * NN pipe: 480x480 RGB888 snapshot
    */
 
-  ctx->fps = fps;
+  int ret = stm32n6_dcmipp_init(800, 480, fps);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "camera: DCMIPP init failed: %d\n", ret);
+      return ret;
+    }
+
   ctx->sensor_width = 2592;   /* IMX335 default */
   ctx->sensor_height = 1944;
+#else
+  ctx->sensor_width = 2592;
+  ctx->sensor_height = 1944;
+#endif
+
+  ctx->fps = fps;
   ctx->initialized = true;
 
-  printf("[camera] Initialized @ %lu fps (stub)\n",
+  syslog(LOG_INFO, "camera: initialized @ %lu fps\n",
          (unsigned long)fps);
   return 0;
 }
@@ -73,23 +75,19 @@ int camera_hal_config_display(struct camera_context_s *ctx,
       return -1;
     }
 
-  /* On real hardware:
-   *   CMW_DCMIPP_Conf_t dcmipp_conf = {0};
-   *   dcmipp_conf.output_width = cfg->width;
-   *   dcmipp_conf.output_height = cfg->height;
-   *   dcmipp_conf.output_format = DCMIPP_PIXEL_PACKER_FORMAT_RGB565_1;
-   *   dcmipp_conf.output_bpp = cfg->bpp;
-   *   dcmipp_conf.mode = CMW_Aspect_ratio_crop;
-   *   dcmipp_conf.enable_gamma_conversion = 0;
-   *   CMW_CAMERA_SetPipeConfig(DCMIPP_PIPE1, &dcmipp_conf, &pitch);
-   */
-
   ctx->display_pipe = *cfg;
 
-  printf("[camera] Display pipe configured: %lux%lu %s\n",
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  /* Display pipe config is handled by stm32n6_dcmipp_init
+   * (800x480 RGB565 continuous)
+   */
+
+  syslog(LOG_INFO, "camera: display pipe %lux%lu %s\n",
          (unsigned long)cfg->width,
          (unsigned long)cfg->height,
          cfg->format == CAM_FMT_RGB565 ? "RGB565" : "other");
+#endif
+
   return 0;
 }
 
@@ -101,22 +99,19 @@ int camera_hal_config_nn(struct camera_context_s *ctx,
       return -1;
     }
 
-  /* On real hardware:
-   *   CMW_DCMIPP_Conf_t dcmipp_conf = {0};
-   *   dcmipp_conf.output_width = cfg->width;
-   *   dcmipp_conf.output_height = cfg->height;
-   *   dcmipp_conf.output_format = DCMIPP_PIXEL_PACKER_FORMAT_RGB888_1;
-   *   dcmipp_conf.output_bpp = cfg->bpp;
-   *   dcmipp_conf.mode = CMW_Aspect_ratio_crop;
-   *   CMW_CAMERA_SetPipeConfig(DCMIPP_PIPE2, &dcmipp_conf, &pitch);
-   */
-
   ctx->nn_pipe = *cfg;
 
-  printf("[camera] NN pipe configured: %lux%lu %s\n",
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  /* NN pipe config is handled by stm32n6_dcmipp_init
+   * (480x480 RGB888 snapshot)
+   */
+
+  syslog(LOG_INFO, "camera: NN pipe %lux%lu %s\n",
          (unsigned long)cfg->width,
          (unsigned long)cfg->height,
          cfg->format == CAM_FMT_RGB888 ? "RGB888" : "other");
+#endif
+
   return 0;
 }
 
@@ -128,16 +123,20 @@ int camera_hal_start(struct camera_context_s *ctx, int pipe,
       return -1;
     }
 
-  (void)buffer;
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  uint32_t dcmipp_mode = (mode == CAM_MODE_CONTINUOUS) ?
+                          DCMIPP_MODE_CONTINUOUS :
+                          DCMIPP_MODE_SNAPSHOT;
+  int ret = stm32n6_dcmipp_start(pipe, buffer, dcmipp_mode);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "camera: pipe %d start failed: %d\n",
+             pipe, ret);
+      return ret;
+    }
+#endif
 
-  /* On real hardware:
-   *   uint32_t cmw_mode = (mode == CAM_MODE_CONTINUOUS) ?
-   *                         CMW_MODE_CONTINUOUS : CMW_MODE_SNAPSHOT;
-   *   CMW_CAMERA_Start(pipe == 0 ? DCMIPP_PIPE1 : DCMIPP_PIPE2,
-   *                    buffer, cmw_mode);
-   */
-
-  printf("[camera] Pipe %d started (%s)\n",
+  syslog(LOG_INFO, "camera: pipe %d started (%s)\n",
          pipe,
          mode == CAM_MODE_CONTINUOUS ? "continuous" : "snapshot");
   return 0;
@@ -150,11 +149,17 @@ int camera_hal_stop(struct camera_context_s *ctx, int pipe)
       return -1;
     }
 
-  /* On real hardware:
-   *   CMW_CAMERA_Suspend(pipe == 0 ? DCMIPP_PIPE1 : DCMIPP_PIPE2);
-   */
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  int ret = stm32n6_dcmipp_stop(pipe);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "camera: pipe %d stop failed: %d\n",
+             pipe, ret);
+      return ret;
+    }
+#endif
 
-  printf("[camera] Pipe %d stopped\n", pipe);
+  syslog(LOG_INFO, "camera: pipe %d stopped\n", pipe);
   return 0;
 }
 
@@ -165,9 +170,11 @@ void camera_hal_isp_update(struct camera_context_s *ctx)
       return;
     }
 
-  /* On real hardware:
-   *   CMW_CAMERA_Run();  (updates AE/AWB/ISP parameters)
-   */
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  /* Run ISP auto-exposure / auto-white-balance */
+
+  stm32n6_dcmipp_isp_update();
+#endif
 }
 
 int camera_hal_set_callback(struct camera_context_s *ctx, int pipe,
@@ -190,10 +197,13 @@ void camera_hal_deinit(struct camera_context_s *ctx)
       return;
     }
 
-  /* On real hardware:
-   *   CMW_CAMERA_DeInit();
-   */
+#ifdef CONFIG_ARCH_CHIP_STM32N6
+  /* Stop both pipes */
+
+  stm32n6_dcmipp_stop(0);
+  stm32n6_dcmipp_stop(1);
+#endif
 
   memset(ctx, 0, sizeof(*ctx));
-  printf("[camera] Deinitialized\n");
+  syslog(LOG_INFO, "camera: deinitialized\n");
 }

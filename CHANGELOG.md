@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-07-11
+
+### Added
+- Chip drivers: DCMIPP camera (stm32n6_dcmipp.c/h) and LTDC display (stm32n6_ltdc.c/h)
+  - Dual-pipe camera (display + NN), /dev/video0 V4L2 interface
+  - Dual-layer display with double-buffered foreground, /dev/fb0
+- EdgeSight new modules:
+  - sensor_fusion.c/h: multi-modal decision fusion (vision+audio+PIR+smoke+temp)
+  - env_sensor.c/h: environmental sensor driver (SHT30 + MQ-2 + PIR)
+  - npu_pipeline.c/h: dual-model inference coordinator (YOLO + MoveNet)
+  - edgesight_cmd.c/h: NSH command interface (status/config/log/reset/help)
+  - test_sensor_fusion.c: 8-scenario unit test (ALL PASS)
+- Board integration: DCMIPP + LTDC init in board_bringup.c with Kconfig guards
+
+### Fixed
+- Kconfig guard: compile DCMIPP/LTDC only when CONFIG_VIDEO/CONFIG_VIDEO_FB enabled
+- Fixes nsh build failure where video headers were included but framework not enabled
+
 ## [0.5.0] - 2026-07-10
 
 ### Added
