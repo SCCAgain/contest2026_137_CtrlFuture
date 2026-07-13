@@ -3,12 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  *
-<<<<<<< HEAD
- * EdgeSight - NSH command interface.
- * Provides runtime commands for EdgeSight management.
-=======
  * EdgeSight - NSH command interface implementation.
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
  *
  ****************************************************************************/
 
@@ -20,18 +15,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-<<<<<<< HEAD
-
-=======
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 #include "edgesight_cmd.h"
 #include "config.h"
 #include "perf_stats.h"
 #include "event_log.h"
-<<<<<<< HEAD
-#include "alert_msg.h"
-=======
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 
 /****************************************************************************
  * Private Data
@@ -45,47 +32,24 @@ static struct edgesight_cmd_context_s *g_cmd_ctx;
 
 static void cmd_status(void)
 {
-<<<<<<< HEAD
-  struct perf_stats_s *perf;
-  struct event_log_s *log;
-
-=======
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
-  if (g_cmd_ctx == NULL || !g_cmd_ctx->running)
+  if (g_cmd_ctx == NULL || g_cmd_ctx->running == NULL)
     {
-      printf("EdgeSight: not running\n");
+      printf("EdgeSight: not initialized\n");
       return;
     }
 
-<<<<<<< HEAD
-  perf = g_cmd_ctx->perf;
-  log = g_cmd_ctx->log;
-
   printf("=== EdgeSight Status ===\n");
   printf("State: %s\n",
-         g_cmd_ctx->running ? "RUNNING" : "STOPPED");
-=======
-  printf("=== EdgeSight Status ===\n");
-  printf("State: RUNNING\n");
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
+         *g_cmd_ctx->running ? "RUNNING" : "STOPPED");
   printf("Frames: %lu\n",
-         (unsigned long)g_cmd_ctx->frame_count);
+         (unsigned long)*g_cmd_ctx->frame_count);
   printf("Detections: %lu\n",
-         (unsigned long)g_cmd_ctx->detect_count);
+         (unsigned long)*g_cmd_ctx->detect_count);
   printf("Falls: %lu\n",
-         (unsigned long)g_cmd_ctx->fall_count);
+         (unsigned long)*g_cmd_ctx->fall_count);
   printf("Recording: %s\n",
-         g_cmd_ctx->recording ? "YES" : "NO");
+         *g_cmd_ctx->recording ? "YES" : "NO");
 
-<<<<<<< HEAD
-  if (perf != NULL)
-    {
-      printf("FPS: %lu\n",
-             (unsigned long)perf_stats_get_fps(perf));
-    }
-
-  if (log != NULL)
-=======
   if (g_cmd_ctx->perf != NULL)
     {
       printf("FPS: %lu\n",
@@ -94,24 +58,15 @@ static void cmd_status(void)
     }
 
   if (g_cmd_ctx->log != NULL)
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
     {
       uint32_t total;
       uint32_t flushed;
       uint16_t dropped;
 
-<<<<<<< HEAD
-      event_log_stats(log, &total, &flushed, &dropped);
-      printf("Log: %lu total, %lu flushed, %u dropped\n",
-             (unsigned long)total,
-             (unsigned long)flushed,
-             dropped);
-=======
       event_log_stats(g_cmd_ctx->log,
                       &total, &flushed, &dropped);
       printf("Log: %lu total, %u dropped\n",
              (unsigned long)total, dropped);
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
     }
 }
 
@@ -153,6 +108,7 @@ static void cmd_reset(void)
 static void cmd_help(void)
 {
   printf("EdgeSight commands:\n");
+  printf("  edgesight start    - Start EdgeSight pipeline\n");
   printf("  edgesight status   - Show runtime status\n");
   printf("  edgesight config   - Show configuration\n");
   printf("  edgesight log      - Show recent events\n");
