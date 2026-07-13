@@ -16,10 +16,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-<<<<<<< HEAD
-
-=======
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 #include "fall_detect.h"
 #include "perf_stats.h"
 #include "event_log.h"
@@ -28,11 +24,6 @@
  * Public Types
  ****************************************************************************/
 
-<<<<<<< HEAD
-/* Command context (shared with main app) */
-
-=======
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 struct edgesight_cmd_context_s
 {
   volatile bool *running;
@@ -49,25 +40,8 @@ struct edgesight_cmd_context_s
  * Public Function Prototypes
  ****************************************************************************/
 
-<<<<<<< HEAD
-/**
- * @brief Initialize NSH command interface
- * @param ctx Command context (shared with main app)
- * @return 0 on success
- */
-
 int edgesight_cmd_init(struct edgesight_cmd_context_s *ctx);
 
-/**
- * @brief Execute an EdgeSight command
- * @param cmd Command string (status/config/log/reset/help)
- * @return 0 on success, -1 on error
- */
-
-=======
-int edgesight_cmd_init(struct edgesight_cmd_context_s *ctx);
-
->>>>>>> ba5eee5 (app: integrate sensor fusion, env sensor, NPU pipeline and NSH command)
 int edgesight_cmd_execute(const char *cmd);
 
 #endif /* __APP_EDGESIGHT_CMD_H */
