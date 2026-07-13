@@ -37,6 +37,10 @@
 #  include "arm_internal.h"
 #  include "stm32n6_dcmipp.h"
 #  include "stm32n6_ltdc.h"
+#  include "stm32n6_xspi.h"
+#  include "stm32n6_sdmmc.h"
+#  include "stm32n6_ethernet.h"
+#  include "stm32n6_i2c.h"
 #endif
 
 #include <arch/board/board.h>
@@ -77,9 +81,48 @@ static int board_bringup(void)
 #endif
 
 #ifdef CONFIG_ARCH_CHIP_STM32N6
-#  ifdef CONFIG_VIDEO
-  /* Initialize DCMIPP camera (800x480 @ 30fps) */
 
+  /* XSPI Flash: memory-mapped mode for model weights */
+
+#  ifdef CONFIG_MTD_XSPI
+  ret = stm32n6_xspi_initialize(2);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR,
+             "ERROR: XSPI2 init failed: %d\n", ret);
+    }
+  else
+    {
+      stm32n6_xspi_enable_mmap(2);
+    }
+#  endif
+
+  /* SDMMC: SD card for recording */
+
+#  ifdef CONFIG_MMCSD
+  ret = stm32n6_sdmmc_initialize(1);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR,
+             "ERROR: SDMMC init failed: %d\n", ret);
+    }
+#  endif
+
+  /* I2C: sensor bus (I2C4 for camera control) */
+
+#  ifdef CONFIG_I2C
+  stm32n6_i2cbus_initialize(4);
+#  endif
+
+  /* Ethernet: network connectivity */
+
+#  ifdef CONFIG_NET
+  stm32n6_ethernet_init(NULL);
+#  endif
+
+  /* DCMIPP camera (800x480 @ 30fps) */
+
+#  ifdef CONFIG_VIDEO
   ret = stm32n6_dcmipp_init(800, 480, 30);
   if (ret < 0)
     {
@@ -88,11 +131,9 @@ static int board_bringup(void)
     }
 #  endif
 
-#  ifdef CONFIG_VIDEO_FB
-  /* Initialize LTDC display (800x480, dual-layer)
-   * Framebuffers allocated from board.h or linker script
-   */
+  /* LTDC display (800x480, dual-layer) */
 
+#  ifdef CONFIG_VIDEO_FB
   ret = stm32n6_ltdc_init(800, 480,
                             (void *)BOARD_LCD_BG_ADDR,
                             (void *)BOARD_LCD_FG_ADDR0,
