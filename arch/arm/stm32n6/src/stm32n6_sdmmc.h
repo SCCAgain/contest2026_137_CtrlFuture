@@ -15,7 +15,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/mmcsd/mmcsd.h>
+#include <nuttx/mmcsd.h>
 
 /****************************************************************************
  * Public Function Prototypes

@@ -18,7 +18,7 @@
 #include <nuttx/config.h>
 #include <nuttx/kmalloc.h>
 #include <nuttx/semaphore.h>
-#include <nuttx/mmcsd/mmcsd.h>
+#include <nuttx/mmcsd.h>
 #include <syslog.h>
 #include <string.h>
 
