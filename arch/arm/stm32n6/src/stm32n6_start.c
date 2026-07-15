@@ -49,6 +49,10 @@ void stm32_boardinitialize(void);
 #define IDLE_STACK \
   ((uintptr_t)_ebss + CONFIG_IDLETHREAD_STACKSIZE)
 
+/* VTOR register address */
+
+#define NVIC_VECTAB        0xe000ed08
+
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -81,10 +85,38 @@ static inline void showprogress(char c)
  ****************************************************************************/
 
 /****************************************************************************
+ * Name: stm32_reset_dispatch
+ *
+ * Description:
+ *   The STM32N6 boot ROM sets MSPLIM/PSPLIM stack limit registers.
+ *   We must clear them BEFORE any compiler-generated prologue runs,
+ *   otherwise the first stack access triggers a UsageFault.
+ *   This naked function is the true reset vector entry point.
+ *
+ ****************************************************************************/
+
+void __attribute__((naked, noreturn)) stm32_reset_dispatch(void)
+{
+  __asm__ __volatile__
+    (
+
+      /* Clear MSPLIM and PSPLIM so compiler prologues don't fault */
+
+      "mov r0, #0\n\t"
+      "msr msplim, r0\n\t"
+      "msr psplim, r0\n\t"
+
+      /* Fall through to __start */
+
+      "b __start\n\t"
+    );
+}
+
+/****************************************************************************
  * Name: __start
  *
  * Description:
- *   This is the reset entry point.
+ *   This is the main reset entry point (called from naked dispatch).
  *
  ****************************************************************************/
 
@@ -92,6 +124,22 @@ void __start(void)
 {
   const uint32_t *src;
   uint32_t *dest;
+
+  /* Relocate vector table to our SRAM load address */
+
+  *(volatile uint32_t *)NVIC_VECTAB = (uint32_t)_stext;
+
+  /* Disable SysTick and clear pending exceptions
+   * (boot ROM may have left them active)
+   */
+
+  *(volatile uint32_t *)0xe000e010 = 0;  /* SYST_CSR = 0 */
+  *(volatile uint32_t *)0xe000e014 = 0;  /* SYST_RVR = 0 */
+  *(volatile uint32_t *)0xe000ed04 = (1ul << 25);  /* ICSR.PENDSTCLR */
+
+  /* Data/instruction sync barriers */
+
+  __asm__ __volatile__ ("dsb sy\n\t" "isb sy\n\t");
 
   /* Clear .bss */
 
@@ -112,6 +160,24 @@ void __start(void)
   /* Configure clocks */
 
   stm32n6_clockconfig();
+
+  /* Enable SYSCFG and BSEC clocks per errata ES0620 */
+
+  *(volatile uint32_t *)0x440200f0 |= (1 << 1) | (1 << 16);
+
+  /* Set I/O compensation and supply-valid bits
+   * (required for I/O pins to work at high speed)
+   */
+
+  *(volatile uint32_t *)0x44020900 |= (1 << 0);  /* VDDIO2 valid */
+  *(volatile uint32_t *)0x44020904 |= (1 << 0);  /* VDDIO3 valid */
+  *(volatile uint32_t *)0x44020908 |= (1 << 0);  /* VDDIO4 valid */
+  *(volatile uint32_t *)0x4402090c |= (1 << 0);  /* VDDIO5 valid */
+
+  /* Route USART1 kernel clock to HSI (64MHz) */
+
+  *(volatile uint32_t *)0x44020da0 &= ~(0x7 << 0);
+  *(volatile uint32_t *)0x44020da0 |= (0x3 << 0);
 
   /* Configure the UART for early debug output */
 

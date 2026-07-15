@@ -31,7 +31,7 @@ MEMORY
 }
 
 OUTPUT_ARCH(arm)
-ENTRY(_stext)
+ENTRY(stm32_reset_dispatch)
 SECTIONS
 {
     .text : {
